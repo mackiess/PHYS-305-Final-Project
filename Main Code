@@ -1,8 +1,135 @@
 #include <stdio.h>
 #include <math.h>
 
+float RHS(int ieq, float r, float M, float P)
+{
+ float dM = 0.0; //differential mass
+ float dP = 0.0; //differential pressure
+ 
+//ieq = 0 is mass
+  if(ieq == 0)
+  {
+    dM = (3 * M) / r;
+    return dM;
+  }
+
+//ieq = 1 is pressure
+  else if(ieq == 1)
+  {
+    dP = ((3 * M_PI * pow(M,2)) / pow(r,5)) * (1 + ((pow(r,3) * P) / (3 * M))) * (1 + ((pow(r,3) * P) / M)) * (1 - (M / r));
+    return dP;
+  }
+ 
+ //in case ieq is the wrong value
+  else
+  {
+    printf("Error. :(\n");
+    return 0;
+  }
+
+
+}
+
 int main(void)
 {
-  printf("Hello world");
+  float M = 0.0;    //mass
+  float dM = 0.0;   //differential mass
+  float r = 0.0;    //radius
+  float dr = 0.0;   //differential radius
+  float P = 0.0;    //pressure
+  float dens = 0.0; //density
+  int i = 0; //equation loop counter
+
+  //Mass(r) = int of 
+  //[az_ang from (0 to pi)] and
+  //[eq_ang from (0 to pi)] and 
+  //[r from (0 to R)] of
+  //[density * r^2 * sin(az_ang) * dr * d(eq_ang) * d(az_ang)] 
+   
   return 0;
 }
+
+//////////////////////////////////////////////////////////////////////
+//* RK METHOD FOR ORBITS FROM CLASS
+/*
+float RHS(int ieq, float x, float y, float ux, float uy)
+{
+  float dux = 0.0;
+  float duy = 0.0;
+
+  if(ieq == 0) //x
+    {
+      return ux;
+    }
+  else if(ieq == 1) //y
+    {
+      return uy;
+    }
+  else if(ieq == 2) //ux
+    {
+      dux = -x / (pow(x*x + y*y, 3.0/2.0) + pow(10,-6));
+      return dux;
+    }
+  else if(ieq == 3) //uy
+    {
+      duy = -y / (pow(x*x + y*y, 3.0/2.0) + pow(10,-6));
+      return duy;
+    }
+  else
+    {
+      printf("Error\n");
+      return 0.0;
+    }
+
+}
+
+int main(void)
+{
+
+  float t = 0.0;
+  float var[4] = {1.0, 0.0, 0.0, 1.0};    //x, y, ux, uy
+  float midvar[4] = {0.0, 0.0, 0.0, 0.0}; //xmid, ymid, uxmid, uymid
+  float h = 2048.0;
+  float step = 1.0 / h;
+  int i = 0;
+  float j = 0.0;
+  float E = 0.0;
+  float E0 = -0.5;
+  float error = 0.0;
+
+for(j = 1.0; j <= pow(2,20); j = j * 2.0)
+    {     
+      //printf("Loop #%d\n", j);   
+      h = j;   
+      step = 1.0 / h;
+      
+      //reinitialize initial conditions
+      var[0] = 1.0;
+      var[1] = 0.0;
+      var[2] = 0.0;
+      var[3] = 1.0;
+     
+      for(t = 0.0;t <= 10.0; t = t + step)
+	{	
+	  //printf("%e\t%e\n", var[0], var[1]);     
+	  for(i = 0; i < 4; i++) 
+	    {    
+	      //xmid = x + step/2 * dx	 
+	      midvar[i] = var[i] + (step / 2.0) * RHS(i,var[0],var[1],var[2],var[3]);
+	 
+	      //x = x + step * dxmid
+	      var[i] = var[i] + step * RHS(i,midvar[0],midvar[1],midvar[2],midvar[3]);
+	    }
+	}
+     
+      E = 0.5 * (pow(var[2],2) + pow(var[3],2)) - pow(pow(var[0],2) + pow(var[1],2), -0.5);
+
+      error = fabs((E - E0) / E0);
+      printf("%e %e\n", step, error);
+    }
+      
+
+  return 0;
+}
+
+*/
