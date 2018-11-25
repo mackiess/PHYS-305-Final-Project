@@ -5,6 +5,7 @@ float RHS(int ieq, float r, float M, float P)
 {
  float dM = 0.0; //differential mass
  float dP = 0.0; //differential pressure
+ float dG = 0.0; //differential gravity
  
 //ieq = 0 is mass
   if(ieq == 0)
@@ -20,26 +21,44 @@ float RHS(int ieq, float r, float M, float P)
     return dP;
   }
  
+ //ieq = 2 is gravity
+ else if(ieq == 2)
+ {
+   dG = ; //need eq for this
+   reutrn dG;
+ }
+ 
  //in case ieq is the wrong value
   else
   {
     printf("Error. :(\n");
     return 0;
   }
-
-
 }
 
 int main(void)
 {
-  float M = 0.0;    //mass
-  float dM = 0.0;   //differential mass
-  float r = 0.0;    //radius
-  float dr = 0.0;   //differential radius
-  float P = 0.0;    //pressure
-  float dens = 0.0; //density
-  int i = 0; //equation loop counter
-
+ //what are our initial values??
+  float k1[3] = {0.0, 0.0, 0.0}; //mass, degen. pressure (outward), grav. pressure (inward)
+  float k2[3] = {0.0, 0.0, 0.0}; //mid values for everything above
+  float R = 0.0;	//radius
+  float dens = 0.0;	//initialize to whatever value
+  float h = 8.0;	//step precision
+  float step = 1.0/h;	//actual step
+  int i = 0; 	   	//equation loop counter
+  
+  for(R = 0.00001; R <= 20.0; R = R + step) //radius goes from almost 0 to well beyond what should be the minimum radius in km
+	{	     
+	  for(i = 0; i < 3; i++) //to calc mass, degen press, and grav press
+	    {    
+	      //xmid = x + step/2 * dx	 
+	      k2[i] = k1[i] + (step / 2.0) * RHS(i,k1[0],k1[1],k1[2]);
+	 
+	      //x = x + step * dxmid
+	      k1[i] = k1[i] + step * RHS(i,k2[0],k2[1],k2[2]);
+	    }
+	}
+  
   //Mass(r) = int of 
   //[az_ang from (0 to pi)] and
   //[eq_ang from (0 to pi)] and 
