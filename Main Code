@@ -1,31 +1,34 @@
 #include <stdio.h>
 #include <math.h>
 
-float RHS(int ieq, float r, float M, float P)
+float RHS(int ieq, float R, float M, float D, float P)
 {
+ float R0 = 0.0; //value for R0
  float dM = 0.0; //differential mass
+ float dD = 0.0; //differential density
  float dP = 0.0; //differential pressure
- float dG = 0.0; //differential gravity
+
+ // finish this R0 = pow(
  
 //ieq = 0 is mass
   if(ieq == 0)
   {
-    dM = (3 * M) / r;
-    return dM;
+   dM = R0 * D * pow(R,3);
+   return dM;   
   }
 
-//ieq = 1 is pressure
+//ieq = 1 is density
   else if(ieq == 1)
   {
-    dP = ((3 * M_PI * pow(M,2)) / pow(r,5)) * (1 + ((pow(r,3) * P) / (3 * M))) * (1 + ((pow(r,3) * P) / M)) * (1 - (M / r));
-    return dP;
+    //insert diff eq here
+    return dD;
   }
  
- //ieq = 2 is gravity
+ //ieq = 2 is pressure
  else if(ieq == 2)
  {
-   dG = ; //need eq for this
-   reutrn dG;
+  dP = (M / (2 * pow(R,2)) * (1 + (P / D)) * (1 + (pow(R,3) * P / M)) * (1 - (M / R));
+    return dP;
  }
  
  //in case ieq is the wrong value
@@ -39,32 +42,25 @@ float RHS(int ieq, float r, float M, float P)
 int main(void)
 {
  //what are our initial values??
-  float k1[3] = {0.0, 0.0, 0.0}; //mass, degen. pressure (outward), grav. pressure (inward)
+  float k1[3] = {0.0, 0.0, 0.0}; //mass, density, degen. pressure (outward)
   float k2[3] = {0.0, 0.0, 0.0}; //mid values for everything above
   float R = 0.0;	//radius
-  float dens = 0.0;	//initialize to whatever value
   float h = 8.0;	//step precision
   float step = 1.0/h;	//actual step
   int i = 0; 	   	//equation loop counter
   
   for(R = 0.00001; R <= 20.0; R = R + step) //radius goes from almost 0 to well beyond what should be the minimum radius in km
 	{	     
-	  for(i = 0; i < 3; i++) //to calc mass, degen press, and grav press
+	  for(i = 0; i < 3; i++) //to calc mass, density, degen press
 	    {    
 	      //xmid = x + step/2 * dx	 
-	      k2[i] = k1[i] + (step / 2.0) * RHS(i,k1[0],k1[1],k1[2]);
+	      k2[i] = k1[i] + (step / 2.0) * RHS(i,R,k1[0],k1[1],k1[2]);
 	 
 	      //x = x + step * dxmid
-	      k1[i] = k1[i] + step * RHS(i,k2[0],k2[1],k2[2]);
+	      k1[i] = k1[i] + step * RHS(i,R,k2[0],k2[1],k2[2]);
 	    }
 	}
-  
-  //Mass(r) = int of 
-  //[az_ang from (0 to pi)] and
-  //[eq_ang from (0 to pi)] and 
-  //[r from (0 to R)] of
-  //[density * r^2 * sin(az_ang) * dr * d(eq_ang) * d(az_ang)] 
-   
+
   return 0;
 }
 
