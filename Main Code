@@ -3,17 +3,14 @@
 
 float RHS(int ieq, float R, float M, float D, float P)
 {
- float R0 = 0.0; //value for R0
  float dM = 0.0; //differential mass
  float dD = 0.0; //differential density
  float dP = 0.0; //differential pressure
-
- // finish this R0 = pow(
  
 //ieq = 0 is mass
   if(ieq == 0)
   {
-   dM = R0 * D * pow(R,3);
+   dM = pow(R,2) * D;
    return dM;   
   }
 
