@@ -7,7 +7,6 @@ float RHS(int ieq, float R, float M, float P, float D)
  float dP = 0.0; //differential pressure
 
  float gamma = 4.0 / 3.0; //exponent number for p = dens ^ gamma
-=======
  
 //ieq = 0 is mass
   if(ieq == 0)
