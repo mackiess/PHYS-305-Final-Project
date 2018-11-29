@@ -3,24 +3,24 @@
 
 float RHS(int ieq, float R, float M, float P, float D)
 {
+ float R0 = 0.0; //value for R0
  float dM = 0.0; //differential mass
  float dP = 0.0; //differential pressure
-
  float gamma = 4.0 / 3.0; //exponent number for p = dens ^ gamma
+ float soft = 0.000001;
  
 //ieq = 0 is mass
   if(ieq == 0)
   {
-   dM = D * pow(R,3);
+    dM = D * pow(R,2);
    // printf("dM: %e\n", dM);
-   dM = pow(R,2) * D;
    return dM;   
   }
 
  //ieq = 1 is pressure
  else if(ieq == 1)
  {
-   dP = (M / (2.0 * pow(R,2))) * (1.0 + (P / D)) * (1.0 + (pow(R,3) * P) / M) * (1.0 - (M / R));
+   dP = -1.0 * (M / (2.0 * pow(R,2) + soft)) * (1.0 + pow(P, 1.0 - (1.0 / gamma))) * (1.0 + (pow(R,3) * P) / (M + soft)) / (1.0 - (M / (R + soft)));
    return dP;
  }
  
@@ -42,54 +42,62 @@ float RHS(int ieq, float R, float M, float P, float D)
 int main(void)
 {
  //what are our initial values??
-  float k1[3] = {0.0, 1.0, 1.0}; //mass, degen. pressure (outward), density
-  float k2[3] = {0.0, 0.0, 0.0}; //mid values for everything above
-  float k3[3] = {0.0, 0.0, 0.0}; //more mid vals
-  float k4[3] = {0.0, 0.0, 0.0}; //more mid vals
-  float R = 0.0;                 //radius
-  float steps = 128;	         //number of step
+  float k1[2] = {0.0, 1.0}; //mass, degen. pressure (outward)
+  float k2[2] = {0.0, 0.0}; //mid values for everything above
+  float k3[2] = {0.0, 0.0}; //more mid vals
+  float k4[2] = {0.0, 0.0}; //more mid vals
+  float D = 1.0;            //density
+  float R = 0.0;            //radius
+  float gamma = 4.0 / 3.0;  //exponent number for p = dens ^ gamma
+  float steps = 64;	         //number of step
   float h = 1.0 / (float)steps;  //actual step amount
   int i = 0; 	   	         //radius loop counter
   int j = 0;                     //equation loop counter
   int k = 0;                     //error loop counter
   int l, m, n;                   //individual k counters
   
-  //radius goes from almost 0 to well beyond what should be the minimum radius in km  
+  //radius goes from almost 0 to well beyond what should be the minimum radius  
   for(i = 1; i <= steps ; i++) 
     {	     
+      //increase radius     
       R = 1.0 * (float)i;
+ //density decreases as radius increases
+      D = pow(k1[1], (1.0/gamma));
 
-      //printf("%e\n", R);
+      printf("Radius: %e\tDensity: %e\tMass: %e\tPressure: %e\n", R, D, k1[0], k1[1]);
  
       //to calculate mass and degen pressure for each half step
       //xmid1 = x + step/2 * dx
-      for(j = 0; j < 3; j++)
+      for(j = 0; j < 2; j++)
 	{    
-	  k2[j] = k1[j] + (h / 2.0) * RHS(j,R,k1[0],k1[1],k1[2]);
-	  printf("mass: %e\n", k2[0]);
+	  k2[j] = k1[j] + (h / 2.0) * RHS(j,R,k1[0],k1[1],D);
+	  //  printf("Density%d: %e\t", j +1, k2[2]);
 	}
-
+      // printf("\n");
+      
       //xmid2 = x + step/2 * dx
-      for(l = 0; l < 3; l++)
+      for(l = 0; l < 2; l++)
 	{ 
-	  k3[l] = k2[l] + (h / 2.0) * RHS(l,R,k2[0],k2[1],k2[2]);
+	  k3[l] = k2[l] + (h / 2.0) * RHS(l,R,k2[0],k2[1],D);
+	  //  printf("Density%d: %e\t", l + 1, k3[2]);
 	}
+      //printf("\n");
 
       //xmid3 = x + step/2 * dx
-      for(m = 0; m < 3; m++)
+      for(m = 0; m < 2; m++)
 	{
-	  k4[m] = k3[m] + (h / 2.0) * RHS(m,R,k3[0],k3[1],k3[2]);
+	  k4[m] = k3[m] + (h / 2.0) * RHS(m,R,k3[0],k3[1],D);
 	}
 
       //x = x + step * dxmid3
-      for(n = 0; n < 3; n++)
+      for(n = 0; n < 2; n++)
 	{
-	  k1[n] = k1[n] + h * RHS(n,R,k4[0],k4[1],k4[2]);
+	  k1[n] = k1[n] + h * RHS(n,R,k4[0],k4[1],D);
 	}
-     printf("%e %e\n", k1[1], k1[2]);
+      // printf("Mass: %e\tPressure: %e\tDensity: %e\n\n", k1[0], k1[1]);
     }
 
- 
+
 
   return 0;
 }
