@@ -5,197 +5,103 @@ float RHS(int ieq, float R, float M, float P, float D)
 {
   //differential mass
   float dM = 0.0;
+  
   //differential pressure
   float dP = 0.0; 
   
-  //exponent number for p = dens ^ gamma
+  //exponent number for pressure = density ^ gamma
   float gamma = 4.0 / 3.0; 
+  
   //keeps denominators from being 0
   float soft = 0.000001;
  
   //both differential equations are dimensionless
 
-  //ieq = 0 is mass
+  //equation for mass
   if(ieq == 0)
-  {
-    dM = D * pow(R,2);
-   return dM;   
-  }
+    {
+      dM = D * pow(R,2);
+      return dM;   
+    }
 
-  //ieq = 1 is pressure
+  //equation for pressure
   else if(ieq == 1)
     {
-      dP = -1.0 * (M / (2.0 * pow(R,2) + soft)) * 
-	(1.0 + pow(P, 1.0 - (1.0 / gamma))) * 
-	(1.0 + (pow(R,3) * P) / (M + soft)) / 
+      dP = -1.0 * (M / (2.0 * (pow(R,2) + soft))) * (1.0 + pow(P, 1.0 - (1.0 / gamma))) * (1.0 + (pow(R,3) * P) / (M + soft)) / 
 	(1.0 - (M / (R + soft)));
       return dP;
     }
-  
-  //in case ieq is the wrong value
-  else
-  {
-    printf("Error. :(\n");
-    return 0;
-  }
 }
 
 int main(void)
 {
   //mass, degen. pressure (outward)  
-  float k1[2] = {0.0, 1.76}; 
+  float k1[2] = {0.0, 1.76};
+  
   //mid values for everything above
   float k2[2] = {0.0, 0.0}; 
+  
   // mid vals of the mid vals
   float k3[2] = {0.0, 0.0}; 
+  
   //mid vals of the mid vals of the mid vals
   float k4[2] = {0.0, 0.0}; 
  
   //density
-  float D = 1.53;            
+  float D = 1.53;  
+  
   //radius
-  float R = 0.0;            
+  float R = 0.0;     
+  
   //exponent number for p = dens ^ gamma  
   float gamma = 4.0 / 3.0;  
-  //number of step
-  float steps = 128;	         
-  //actual step amount
+  
+  //number of steps
+  float steps = 128;	
+  
+  //actual incremental radius step
   float dR = 1.75 / (float)steps;  
   
   //radius loop counter
   int i = 0;
+  
   //equation loop counter 	   	         
-  int j = 0;                     
-  //error loop counter
-  int k = 0;                     
-  //individual k counters 
+  int j = 0;     
+  
+  //individual half-step counters 
   int l, m, n;                   
   
   //radius goes from almost 0 to well beyond what should be the minimum radius  
   for(i = 1; i <= steps ; i++) 
     {	     
- printf("Radius: %e\tDensity: %e\tMass: %e\tPressure: %e\n", R, D, k1[0], k1[1]);
-
-      //to calculate mass and degen pressure for each half step
-      //xmid1 = x + step/2 * dx
+      //to calculate mass and pressure for each half step
       for(j = 0; j < 2; j++)
 	{    
 	  k2[j] = k1[j] + (dR / 2.0) * RHS(j,R,k1[0],k1[1],D);
 	}
-      
-      //xmid2 = x + step/2 * dx
+
       for(l = 0; l < 2; l++)
 	{ 
 	  k3[l] = k2[l] + (dR / 2.0) * RHS(l,R,k2[0],k2[1],D);
 	}
 
-      //xmid3 = x + step/2 * dx
       for(m = 0; m < 2; m++)
 	{
 	  k4[m] = k3[m] + (dR / 2.0) * RHS(m,R,k3[0],k3[1],D);
 	}
 
-      //x = x + step * dxmid3
       for(n = 0; n < 2; n++)
 	{
 	  k1[n] = k1[n] + dR * RHS(n,R,k4[0],k4[1],D);
 	}
       
-      //increase radius     
+      //increase radius by differential amount     
       R = R + dR;
 
-      //get density for updated radius    
+      //get density for final radius    
       D = pow(k1[1], (1.0/gamma));
     }
 
   //the end :)
   return 0;
 }
-
-
-
-
-//////////////////////////////////////////////////////////////////////
-//* RK METHOD FOR ORBITS FROM CLASS
-/*
-float RHS(int ieq, float x, float y, float ux, float uy)
-{
-  float dux = 0.0;
-  float duy = 0.0;
-
-  if(ieq == 0) //x
-    {
-      return ux;
-    }
-  else if(ieq == 1) //y
-    {
-      return uy;
-    }
-  else if(ieq == 2) //ux
-    {
-      dux = -x / (pow(x*x + y*y, 3.0/2.0) + pow(10,-6));
-      return dux;
-    }
-  else if(ieq == 3) //uy
-    {
-      duy = -y / (pow(x*x + y*y, 3.0/2.0) + pow(10,-6));
-      return duy;
-    }
-  else
-    {
-      printf("Error\n");
-      return 0.0;
-    }
-
-}
-
-int main(void)
-{
-
-  float t = 0.0;
-  float var[4] = {1.0, 0.0, 0.0, 1.0};    //x, y, ux, uy
-  float midvar[4] = {0.0, 0.0, 0.0, 0.0}; //xmid, ymid, uxmid, uymid
-  float h = 2048.0;
-  float step = 1.0 / h;
-  int i = 0;
-  float j = 0.0;
-  float E = 0.0;
-  float E0 = -0.5;
-  float error = 0.0;
-
-for(j = 1.0; j <= pow(2,20); j = j * 2.0)
-    {     
-      //printf("Loop #%d\n", j);   
-      h = j;   
-      step = 1.0 / h;
-      
-      //reinitialize initial conditions
-      var[0] = 1.0;
-      var[1] = 0.0;
-      var[2] = 0.0;
-      var[3] = 1.0;
-     
-      for(t = 0.0;t <= 10.0; t = t + step)
-	{	
-	  //printf("%e\t%e\n", var[0], var[1]);     
-	  for(i = 0; i < 4; i++) 
-	    {    
-	      //xmid = x + step/2 * dx	 
-	      midvar[i] = var[i] + (step / 2.0) * RHS(i,var[0],var[1],var[2],var[3]);
-	 
-	      //x = x + step * dxmid
-	      var[i] = var[i] + step * RHS(i,midvar[0],midvar[1],midvar[2],midvar[3]);
-	    }
-	}
-     
-      E = 0.5 * (pow(var[2],2) + pow(var[3],2)) - pow(pow(var[0],2) + pow(var[1],2), -0.5);
-
-      error = fabs((E - E0) / E0);
-      printf("%e %e\n", step, error);
-    }
-      
-
-  return 0;
-}
-
-*/
