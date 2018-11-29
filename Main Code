@@ -3,7 +3,6 @@
 
 float RHS(int ieq, float R, float M, float P, float D)
 {
- float R0 = 0.0; //value for R0
  float dM = 0.0; //differential mass
  float dP = 0.0; //differential pressure
  float gamma = 4.0 / 3.0; //exponent number for p = dens ^ gamma
@@ -24,12 +23,12 @@ float RHS(int ieq, float R, float M, float P, float D)
    return dP;
  }
  
- //ieq = 2 is density
+  /* //ieq = 2 is density
   else if(ieq == 2)
   {
     D = pow(P,(1.0 / gamma));
     return D;
-  }
+    }*/
  
  //in case ieq is the wrong value
   else
@@ -42,11 +41,11 @@ float RHS(int ieq, float R, float M, float P, float D)
 int main(void)
 {
  //what are our initial values??
-  float k1[2] = {0.0, 1.0}; //mass, degen. pressure (outward)
+  float k1[2] = {0.0, 1.76}; //mass, degen. pressure (outward)
   float k2[2] = {0.0, 0.0}; //mid values for everything above
   float k3[2] = {0.0, 0.0}; //more mid vals
   float k4[2] = {0.0, 0.0}; //more mid vals
-  float D = 1.0;            //density
+  float D = 1.53;            //density
   float R = 0.0;            //radius
   float gamma = 4.0 / 3.0;  //exponent number for p = dens ^ gamma
   float steps = 64;	         //number of step
@@ -61,9 +60,7 @@ int main(void)
     {	     
       //increase radius     
       R = 1.0 * (float)i;
- //density decreases as radius increases
-      D = pow(k1[1], (1.0/gamma));
-
+ 
       printf("Radius: %e\tDensity: %e\tMass: %e\tPressure: %e\n", R, D, k1[0], k1[1]);
  
       //to calculate mass and degen pressure for each half step
@@ -94,13 +91,15 @@ int main(void)
 	{
 	  k1[n] = k1[n] + h * RHS(n,R,k4[0],k4[1],D);
 	}
+      
       // printf("Mass: %e\tPressure: %e\tDensity: %e\n\n", k1[0], k1[1]);
+      //density decreases as radius increases     
+      D = pow(k1[1], (1.0/gamma));
     }
-
-
 
   return 0;
 }
+
 
 
 //////////////////////////////////////////////////////////////////////
