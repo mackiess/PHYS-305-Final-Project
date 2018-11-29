@@ -1,32 +1,36 @@
 #include <stdio.h>
 #include <math.h>
 
-float RHS(int ieq, float R, float M, float D, float P)
+float RHS(int ieq, float R, float M, float P, float D)
 {
  float dM = 0.0; //differential mass
- float dD = 0.0; //differential density
  float dP = 0.0; //differential pressure
+
+ float gamma = 4.0 / 3.0; //exponent number for p = dens ^ gamma
+=======
  
 //ieq = 0 is mass
   if(ieq == 0)
   {
+   dM = D * pow(R,3);
+   // printf("dM: %e\n", dM);
    dM = pow(R,2) * D;
    return dM;   
   }
 
-//ieq = 1 is density
-  else if(ieq == 1)
-  {
-    //insert diff eq here
-    return dD;
-  }
- 
- //ieq = 2 is pressure
- else if(ieq == 2)
+ //ieq = 1 is pressure
+ else if(ieq == 1)
  {
-  dP = (M / (2 * pow(R,2)) * (1 + (P / D)) * (1 + (pow(R,3) * P / M)) * (1 - (M / R));
-    return dP;
+   dP = (M / (2.0 * pow(R,2))) * (1.0 + (P / D)) * (1.0 + (pow(R,3) * P) / M) * (1.0 - (M / R));
+   return dP;
  }
+ 
+ //ieq = 2 is density
+  else if(ieq == 2)
+  {
+    D = pow(P,(1.0 / gamma));
+    return D;
+  }
  
  //in case ieq is the wrong value
   else
@@ -39,27 +43,58 @@ float RHS(int ieq, float R, float M, float D, float P)
 int main(void)
 {
  //what are our initial values??
-  float k1[3] = {0.0, 0.0, 0.0}; //mass, density, degen. pressure (outward)
+  float k1[3] = {0.0, 1.0, 1.0}; //mass, degen. pressure (outward), density
   float k2[3] = {0.0, 0.0, 0.0}; //mid values for everything above
-  float R = 0.0;	//radius
-  float h = 8.0;	//step precision
-  float step = 1.0/h;	//actual step
-  int i = 0; 	   	//equation loop counter
+  float k3[3] = {0.0, 0.0, 0.0}; //more mid vals
+  float k4[3] = {0.0, 0.0, 0.0}; //more mid vals
+  float R = 0.0;                 //radius
+  float steps = 128;	         //number of step
+  float h = 1.0 / (float)steps;  //actual step amount
+  int i = 0; 	   	         //radius loop counter
+  int j = 0;                     //equation loop counter
+  int k = 0;                     //error loop counter
+  int l, m, n;                   //individual k counters
   
-  for(R = 0.00001; R <= 20.0; R = R + step) //radius goes from almost 0 to well beyond what should be the minimum radius in km
-	{	     
-	  for(i = 0; i < 3; i++) //to calc mass, density, degen press
-	    {    
-	      //xmid = x + step/2 * dx	 
-	      k2[i] = k1[i] + (step / 2.0) * RHS(i,R,k1[0],k1[1],k1[2]);
-	 
-	      //x = x + step * dxmid
-	      k1[i] = k1[i] + step * RHS(i,R,k2[0],k2[1],k2[2]);
-	    }
+  //radius goes from almost 0 to well beyond what should be the minimum radius in km  
+  for(i = 1; i <= steps ; i++) 
+    {	     
+      R = 1.0 * (float)i;
+
+      //printf("%e\n", R);
+ 
+      //to calculate mass and degen pressure for each half step
+      //xmid1 = x + step/2 * dx
+      for(j = 0; j < 3; j++)
+	{    
+	  k2[j] = k1[j] + (h / 2.0) * RHS(j,R,k1[0],k1[1],k1[2]);
+	  printf("mass: %e\n", k2[0]);
 	}
+
+      //xmid2 = x + step/2 * dx
+      for(l = 0; l < 3; l++)
+	{ 
+	  k3[l] = k2[l] + (h / 2.0) * RHS(l,R,k2[0],k2[1],k2[2]);
+	}
+
+      //xmid3 = x + step/2 * dx
+      for(m = 0; m < 3; m++)
+	{
+	  k4[m] = k3[m] + (h / 2.0) * RHS(m,R,k3[0],k3[1],k3[2]);
+	}
+
+      //x = x + step * dxmid3
+      for(n = 0; n < 3; n++)
+	{
+	  k1[n] = k1[n] + h * RHS(n,R,k4[0],k4[1],k4[2]);
+	}
+     printf("%e %e\n", k1[1], k1[2]);
+    }
+
+ 
 
   return 0;
 }
+
 
 //////////////////////////////////////////////////////////////////////
 //* RK METHOD FOR ORBITS FROM CLASS
