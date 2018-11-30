@@ -25,10 +25,7 @@ float RHS(int ieq, float R, float M, float P, float D)
   //ieq = 1 is pressure
   else if(ieq == 1)
     {
-      dP = -0.5 * ((M * pow(P,1.0/gamma)) / ((R*R) + soft)) * 
-	(1.0 + pow(P, (1.0 - (1.0 / gamma)))) * 
-	(1.0 + (((R*R) * P) / (M + soft))) / 
-	(1.0 - (M / (R + soft)));
+      dP = -0.5 * ((M * pow(P,1.0/gamma)) / ((R*R) + soft)) * (1.0 + pow(P, (1.0 - (1.0 / gamma)))) * (1.0 + (((R*R) * P) / (M + soft))) / (1.0 - (M / (R + soft)));
       return dP;
     }
 }
@@ -78,21 +75,25 @@ int main(void)
 	{	     
    
       //to calculate mass and degen pressure for each half step
+      //xmid1 = x + step/2 * dx
 	  for(j = 0; j < 2; j++)
 	    {    
 	      k2[j] = k1[j] + (dR / 2.0) * RHS(j,R,k1[0],k1[1],D);
 	    }
       
+	  //xmid2 = x + step/2 * dx
 	  for(l = 0; l < 2; l++)
 	    { 
 	      k3[l] = k1[l] + (dR / 2.0) * RHS(l,R,k2[0],k2[1],D);
 	    }
-	    
+
+	  //xmid3 = x + step/2 * dx
 	  for(m = 0; m < 2; m++)
 	    {
 	      k4[m] = k1[m] + (dR / 2.0) * RHS(m,R,k3[0],k3[1],D);
 	    }
 
+	  //x = x + step * dxmid3
 	  for(n = 0; n < 2; n++)
 	    {
 	      k1[n] = k1[n] + dR * RHS(n,R,k4[0],k4[1],D);
@@ -113,7 +114,8 @@ int main(void)
 	  //printing values for graphs
 	  //printf("%e %e\n", R, D);
 	  //printf("%e %e\n", R, k1[0]);
-	  //printf("%e %e\n", R, k1[1]);
+	  printf("%e %e\n", R, k1[1]);
+	  //printf("Rad: %e\tMass: %e\tDens: %e\tPres: %e\n", R, k1[0], D, k1[1]);
   
 	}
 
@@ -124,4 +126,4 @@ int main(void)
 
   //the end :)
   return 0;
-}
+} 
