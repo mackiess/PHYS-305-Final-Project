@@ -27,17 +27,10 @@ float RHS(int ieq, float R, float M, float P, float D)
     {
       dP = -0.5 * ((M * pow(P,1.0/gamma)) / ((R*R) + soft)) * 
 	(1.0 + pow(P, (1.0 - (1.0 / gamma)))) * 
-	(1.0 + (((R*R*R) * P) / (M + soft))) / 
+	(1.0 + (((R*R) * P) / (M + soft))) / 
 	(1.0 - (M / (R + soft)));
       return dP;
     }
-  
-  //in case ieq is the wrong value
-  else
-  {
-    printf("Error. :(\n");
-    return 0;
-  }
 }
 
 int main(void)
@@ -60,7 +53,7 @@ int main(void)
   //number of step
   float steps = 8192;	         
   //actual step amount
-  float dR = 6.0 / (float)steps;  
+  float dR = 4.0 / (float)steps;  
   
   //radius loop counter
   int i = 0;
@@ -75,7 +68,7 @@ int main(void)
   // for(k = 1; k <= 500; k++)
   //  {
   
-  //   R = 0.0;
+  //  R = 0.0;
   //  k1[0] = 0.0;
   //  k1[1] = D*D;
  
@@ -84,7 +77,6 @@ int main(void)
       for(i = 1; i <= steps ; i++) 
 	{	     
    
-
       //to calculate mass and degen pressure for each half step
       //xmid1 = x + step/2 * dx
 	  for(j = 0; j < 2; j++)
@@ -121,7 +113,11 @@ int main(void)
 	    {
 	    break;
 	   }
-	  printf("%e %e\n", R, k1[1]);
+
+	  //printing values for graphs
+	  //printf("%e %e\n", R, D);
+	  //printf("%e %e\n", R, k1[0]);
+	  //printf("%e %e\n", R, k1[1]);
   
 	}
 
@@ -133,4 +129,3 @@ int main(void)
   //the end :)
   return 0;
 }
-
