@@ -1,0 +1,156 @@
+#include <stdio.h>
+#include <math.h>
+
+float RHS(int ieq, float R, float M, float P, float D)
+{
+  //differential mass
+  float dM = 0.0;
+  //differential pressure
+  float dP = 0.0; 
+  
+  //exponent number for p = dens ^ gamma
+  float gamma = 2.0; 
+  //keeps denominators from being 0
+  float soft = 0.0000001;
+ 
+  //both differential equations are dimensionless
+
+  //ieq = 0 is mass
+  if(ieq == 0)
+  {
+   dM = D * (R*R);
+   return dM;   
+  }
+
+  //ieq = 1 is pressure
+  else if(ieq == 1)
+    {
+      dP = -0.5 * ((M * pow(P,1.0/gamma)) / ((R*R) + soft)) * 
+	(1.0 + pow(P, (1.0 - (1.0 / gamma)))) * 
+	(1.0 + (((R*R) * P) / (M + soft))) / 
+	(1.0 - (M / (R + soft)));
+      return dP;
+    }
+}
+
+int main(void)
+{
+  //initial radius for convergence plot
+  float r_initial;
+  //mass, degen. pressure (outward)  
+  float k1[2] = {0.0, 0.185}; 
+  //mid values for everything above
+  float k2[2] = {0.0, 0.0}; 
+  // mid vals of the mid vals
+  float k3[2] = {0.0, 0.0}; 
+  //mid vals of the mid vals of the mid vals
+  float k4[2] = {0.0, 0.0}; 
+    
+  //density
+  float D = 0.43;            
+  //initial pressure
+  float P_initial = D*D;
+  //radius
+  float R = 0.0;            
+  //exponent number for p = dens ^ gamma  
+  float gamma = 2.0;  
+  //number of steps
+  float steps = 8192;	         
+  //actual step amount
+  float dR = 4.0 / (float)steps;
+  //error for convergence plot
+  float error; 
+  //expected pressure for convergence plot
+  float P_exp;
+  
+  //radius loop counter
+  int i = 0;
+  //equation loop counter 	   	         
+  int j = 0;                     
+  //density loop counter
+  int k = 0;                     
+  //individual k counters 
+  int l, m, n;                   
+  
+  //this loop allows us to vary the initial density/ stepsize depending on how you monkey with the statements under the loop
+  for(k = 1; k <= 1000000; k*=2)
+    {
+  
+     R = 0.0;
+     k1[0] = 0.0;
+     k1[1] = D*D;
+     steps = k; 
+     dR = 1.1/(float)steps;
+ 
+     
+  //radius goes from almost 0 to well beyond what should be the minimum radius  
+      for(i = 1; i <= steps ; i++) 
+	{	     
+   
+      //to calculate mass and degen pressure for each half step
+      //xmid1 = x + step/2 * dx
+	  for(j = 0; j < 2; j++)
+	    {    
+	      k2[j] = k1[j] + (dR / 2.0) * RHS(j,R,k1[0],k1[1],D);
+	    }
+      
+	  //xmid2 = x + step/2 * dx
+	  for(l = 0; l < 2; l++)
+	    { 
+	      k3[l] = k1[l] + (dR / 2.0) * RHS(l,R,k2[0],k2[1],D);
+	    }
+
+	  //xmid3 = x + step/2 * dx
+	  for(m = 0; m < 2; m++)
+	    {
+	      k4[m] = k1[m] + (dR / 2.0) * RHS(m,R,k3[0],k3[1],D);
+	    }
+
+	  //x = x + step * dxmid3
+	  for(n = 0; n < 2; n++)
+	    {
+	      k1[n] = k1[n] + dR * RHS(n,R,k4[0],k4[1],D);
+	    }
+	  
+	  D = pow(k1[1],(1.0/gamma));
+	  if(R >.01 && R<.1 && r_initial == 0)
+	    {
+	      r_initial = R; 
+	      P_initial = k1[1];
+	    }
+	  //increase radius
+	  
+	  if(R>1)
+	    {
+	      //printf("Final Pressue is %e \n",k1[1]);
+	      //expected value by removing GR equation 
+	      P_exp = (P_initial * (r_initial)*(r_initial)*r_initial)/(R*R*R);
+	      error = fabs(k1[1]-P_exp)/P_exp; 
+	      printf("%e %e \n", dR,error);
+	      break;
+	    }
+	  R = R + dR;
+
+	  //get density for updated radius    
+
+
+	  //keeps results from running away if density is nan
+	  if(isnan(D))
+	    {
+	    break;
+	   }
+
+	  //printing values for graphs
+	  //printf("%e %e\n", R, D);
+	  //printf("%e %e\n", R, k1[0]);
+	  // printf("Radius: %e \t Pressure: %e\n", R, k1[1]);
+	  
+	}
+
+       //printf("Density:%e\n", D);    
+       //D = (float)k * 0.01;
+   }
+
+  //the end :)
+  return 0;
+}
